@@ -8,12 +8,12 @@ fn main() -> AppResult<()> {
     init::tracing();
 
     println!("Hello");
-    
+
     info!("Sample log message");
     warn!("Warning message");
     error!("Error message");
     trace!("Tracing message");
 
-    bail!(AppError);
-    //Ok(())
+    //bail!(AppError);
+    Ok(())
 }
