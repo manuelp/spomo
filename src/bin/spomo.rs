@@ -7,11 +7,15 @@ use std::time::{Duration, Instant};
 use std::{env, thread};
 
 fn read_duration() -> AppResult<Duration> {
-    let cli_arguments: Vec<_> = env::args().map(|a| a.to_owned()).collect();
-    let duration_spec = cli_arguments.get(1).ok_or(AppError)?;
-    feature::duration_parsing::parse_duration(duration_spec)
-        .change_context(AppError)
-        .attach("cannot parse duration spec")
+    let duration_specs: Vec<_> = env::args().skip(1).collect();
+    let mut duration_spec = Duration::ZERO;
+    for spec in duration_specs {
+        let d = feature::duration_parsing::parse_duration(&spec)
+            .change_context(AppError)
+            .attach("cannot parse duration spec")?;
+        duration_spec += d;
+    }
+    Ok(duration_spec)
 }
 
 fn ding() -> AppResult<()> {
