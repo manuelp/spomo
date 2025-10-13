@@ -3,6 +3,7 @@ use spomo::error::{AppError, AppResult};
 use spomo::feature;
 use spomo::feature::audio::{Beeper, SimpleBeeper};
 use spomo::init;
+use owo_colors::OwoColorize;
 use std::time::{Duration, Instant};
 use std::{env, thread};
 
@@ -19,7 +20,7 @@ fn read_duration() -> AppResult<Duration> {
 }
 
 fn ding() -> AppResult<()> {
-    println!("DING!");
+    println!("{}", "DING!".cyan());
     SimpleBeeper::default()
         .beep()
         .change_context(AppError)
@@ -46,8 +47,8 @@ fn main() -> AppResult<()> {
         let remaining_secs = duration_secs - elapsed_secs;
         println!(
             "Remaining: {}\telapsed: {}",
-            format_time(remaining_secs),
-            format_time(elapsed_secs)
+            format_time(remaining_secs).red(),
+            format_time(elapsed_secs).green()
         );
         thread::sleep(Duration::from_secs(1));
         if elapsed_secs >= duration_secs {
