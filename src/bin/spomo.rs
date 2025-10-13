@@ -1,3 +1,4 @@
+use chrono::Local;
 use error_stack::ResultExt;
 use spomo::error::{AppError, AppResult};
 use spomo::feature;
@@ -41,6 +42,7 @@ fn main() -> AppResult<()> {
     let duration_secs = duration_spec.as_secs();
 
     let started = Instant::now();
+    dbg!(&started);
     loop {
         let now = Instant::now();
         let elapsed_secs = (now - started).as_secs();
@@ -56,6 +58,7 @@ fn main() -> AppResult<()> {
         }
     }
     ding()?;
+    println!("Ended: {}", Local::now().to_rfc3339());
 
     Ok(())
 }
