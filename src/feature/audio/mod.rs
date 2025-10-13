@@ -30,7 +30,7 @@ impl Beeper for SimpleBeeper {
         let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
             .change_context(AudioError)
             .attach("cannot open audio output")?;
-        let sink = rodio::Sink::connect_new(&stream_handle.mixer());
+        let sink = rodio::Sink::connect_new(stream_handle.mixer());
         sink.set_volume(self.volume);
         sink.append(rodio::source::SineWave::new(932.));
         thread::sleep(self.duration);

@@ -24,7 +24,7 @@ pub fn parse_duration(input: &str) -> DurationParsingResult<Duration> {
     let maybe_minutes = match_duration(input, r"^(\d+)m$")?
         .map(|num_minutes| Duration::from_secs(num_minutes * 60));
     let maybe_seconds =
-        match_duration(input, r"^(\d+)s$")?.map(|num_seconds| Duration::from_secs(num_seconds));
+        match_duration(input, r"^(\d+)s$")?.map(Duration::from_secs);
 
     maybe_hours
         .or(maybe_minutes)
