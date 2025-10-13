@@ -20,7 +20,7 @@ impl Default for SimpleBeeper {
     fn default() -> Self {
         Self {
             volume: 0.4,
-            duration: Duration::from_secs(1),
+            duration: Duration::from_millis(800),
         }
     }
 }

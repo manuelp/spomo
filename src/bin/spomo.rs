@@ -23,7 +23,8 @@ fn ding() -> AppResult<()> {
         .attach("cannot reproduce beep")
 }
 
-fn format_time(time: &TimeDelta) -> String {
+fn format_time(seconds: i64) -> String {
+    let time = TimeDelta::seconds(seconds);
     format!("{:02}:{:02}", time.num_minutes(), time.num_seconds())
 }
 
@@ -35,20 +36,20 @@ fn main() -> AppResult<()> {
     let duration_spec = TimeDelta::from_std(duration_spec)
         .change_context(AppError)
         .attach("invalid duration spec")?;
+    let duration_secs = duration_spec.as_seconds_f64() as i64;
 
     let started = Utc::now();
-    let end_time = started + duration_spec;
     loop {
         let now = Utc::now();
-        let elapsed_time = now - started;
-        let remaining_time = end_time - now;
+        let elapsed_secs = (now - started).as_seconds_f64() as i64;
+        let remaining_secs = duration_secs - elapsed_secs;
         println!(
             "Remaining: {}\telapsed: {}",
-            format_time(&remaining_time),
-            format_time(&elapsed_time)
+            format_time(remaining_secs),
+            format_time(elapsed_secs)
         );
         thread::sleep(Duration::from_secs(1));
-        if elapsed_time > duration_spec {
+        if elapsed_secs >= duration_secs {
             break;
         }
     }
