@@ -1,8 +1,8 @@
 use error_stack::ResultExt;
 use spomo::error::{AppError, AppResult};
 use spomo::feature;
+use spomo::feature::audio::{Beeper, SimpleBeeper};
 use spomo::init;
-use std::fs::File;
 use std::time::{Duration, Instant};
 use std::{env, thread};
 
@@ -16,17 +16,10 @@ fn read_duration() -> AppResult<Duration> {
 
 fn ding() -> AppResult<()> {
     println!("DING!");
-
-    let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
+    SimpleBeeper::default()
+        .beep()
         .change_context(AppError)
-        .attach("cannot open audio output")?;
-    let sink = rodio::Sink::connect_new(&stream_handle.mixer());
-    sink.set_volume(0.5);
-    sink.append(rodio::source::SineWave::new(932.));
-    thread::sleep(Duration::from_secs(1));
-    sink.stop();
-
-    Ok(())
+        .attach("cannot reproduce beep")
 }
 
 fn main() -> AppResult<()> {
