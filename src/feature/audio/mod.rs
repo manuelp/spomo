@@ -27,14 +27,17 @@ impl Default for SimpleBeeper {
 
 impl Beeper for SimpleBeeper {
     fn beep(&self) -> AudioResult<()> {
-        let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
+        let mut stream_handle = rodio::OutputStreamBuilder::open_default_stream()
             .change_context(AudioError)
             .attach("cannot open audio output")?;
+        stream_handle.log_on_drop(false);
+
         let sink = rodio::Sink::connect_new(stream_handle.mixer());
         sink.set_volume(self.volume);
         sink.append(rodio::source::SineWave::new(932.));
         thread::sleep(self.duration);
         sink.stop();
+        
         Ok(())
     }
 }
