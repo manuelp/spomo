@@ -4,6 +4,7 @@ use spomo::error::{AppError, AppResult};
 use spomo::feature;
 use spomo::feature::audio::{Beeper, SimpleBeeper};
 use spomo::init;
+use spomo::common::format_time;
 use owo_colors::OwoColorize;
 use std::time::{Duration, Instant};
 use std::{env, thread};
@@ -28,12 +29,6 @@ fn ding() -> AppResult<()> {
         .attach("cannot reproduce beep")
 }
 
-fn format_time(seconds: u64) -> String {
-    let minutes = (seconds / 60) % 60;
-    let seconds = seconds % 60;
-    format!("{minutes:02}:{seconds:02}")
-}
-
 fn main() -> AppResult<()> {
     init::error_reporting();
     init::tracing();
@@ -42,7 +37,6 @@ fn main() -> AppResult<()> {
     let duration_secs = duration_spec.as_secs();
 
     let started = Instant::now();
-    dbg!(&started);
     loop {
         let now = Instant::now();
         let elapsed_secs = (now - started).as_secs();
@@ -58,6 +52,7 @@ fn main() -> AppResult<()> {
         }
     }
     ding()?;
+    println!("--------------------");
     println!("Ended: {}", Local::now().to_rfc3339());
 
     Ok(())
