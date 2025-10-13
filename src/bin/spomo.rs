@@ -1,9 +1,10 @@
+use chrono::{TimeDelta, prelude::*};
 use error_stack::ResultExt;
 use spomo::error::{AppError, AppResult};
 use spomo::feature;
 use spomo::feature::audio::{Beeper, SimpleBeeper};
 use spomo::init;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use std::{env, thread};
 
 fn read_duration() -> AppResult<Duration> {
@@ -22,21 +23,29 @@ fn ding() -> AppResult<()> {
         .attach("cannot reproduce beep")
 }
 
+fn format_time(time: &TimeDelta) -> String {
+    format!("{:02}:{:02}", time.num_minutes(), time.num_seconds())
+}
+
 fn main() -> AppResult<()> {
     init::error_reporting();
     init::tracing();
 
     let duration_spec = read_duration()?;
+    let duration_spec = TimeDelta::from_std(duration_spec)
+        .change_context(AppError)
+        .attach("invalid duration spec")?;
 
-    let started = Instant::now();
+    let started = Utc::now();
     let end_time = started + duration_spec;
     loop {
-        let now = Instant::now();
-        let elapsed_time = now.duration_since(started);
-        let remaining_time = end_time.duration_since(now);
+        let now = Utc::now();
+        let elapsed_time = now - started;
+        let remaining_time = end_time - now;
         println!(
-            "Remaining: {:?}, elapsed: {:?}",
-            remaining_time, elapsed_time
+            "Remaining: {}\telapsed: {}",
+            format_time(&remaining_time),
+            format_time(&elapsed_time)
         );
         thread::sleep(Duration::from_secs(1));
         if elapsed_time > duration_spec {
