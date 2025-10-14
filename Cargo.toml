@@ -1,6 +1,8 @@
 [package]
 name = "spomo"
 version = "0.1.3"
+authors = ["Manuel Paccagnella <manuel.paccagnella@protonmail.com>"]
+license = "MIT"
 edition = "2024"
 
 [dependencies]
@@ -11,6 +13,8 @@ tracing = "0.1.41"
 tracing-error = "0.2.1"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
-regex = "1.12.1"
+regex = "1.12.2"
 rodio = "0.21.1"
 chrono = "0.4.42"
+ratatui = "0.29.0"
+crossterm = "0.29.0"
