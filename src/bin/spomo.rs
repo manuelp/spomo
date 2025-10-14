@@ -17,7 +17,7 @@ use spomo::init;
 use std::time::{Duration, Instant};
 use std::{env, thread};
 
-const APP_NAME: &'static str = "pomo";
+const APP_NAME: &'static str = "spomo";
 
 fn read_duration() -> AppResult<Duration> {
     let duration_specs: Vec<_> = env::args().skip(1).collect();
