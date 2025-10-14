@@ -3,7 +3,7 @@ use error_stack::ResultExt;
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
-    layout::Rect,
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Stylize,
     symbols::border,
     text::{Line, Text},
@@ -101,18 +101,34 @@ impl Widget for &App {
 
         let remaining_line = Line::from(vec![
             "Remaining:".into(),
-            format_time(self.cursor.remaining_secs).red().bold()
+            format_time(self.cursor.remaining_secs).red().bold(),
         ]);
-        let elapsed_line = Line::from(vec!(
+        let elapsed_line = Line::from(vec![
             "Elapsed:".into(),
             format_time(self.cursor.elapsed_secs).green(),
-        ));
+        ]);
         let time_text = Text::from(vec![remaining_line, elapsed_line]);
 
+        // Layout work to centering vertically the time text
+        let text_height = time_text.height() as u16;
+        let empty_space = area.height.saturating_sub(text_height);
+        let padding = empty_space / 2;
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(padding),
+                Constraint::Length(text_height),
+                Constraint::Length(padding),
+            ])
+            .split(area);
+
+        // Render the containing block
+        block.render(area, buf);
+
+        // Render the paragraph in the middle rect produced by the vertical layout
         Paragraph::new(time_text)
-            .centered()
-            .block(block)
-            .render(area, buf);
+            .alignment(Alignment::Center)
+            .render(chunks[1], buf);
     }
 }
 
