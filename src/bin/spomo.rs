@@ -17,6 +17,8 @@ use spomo::init;
 use std::time::{Duration, Instant};
 use std::{env, thread};
 
+const APP_NAME: &'static str = "pomo";
+
 fn read_duration() -> AppResult<Duration> {
     let duration_specs: Vec<_> = env::args().skip(1).collect();
     let mut duration_spec = Duration::ZERO;
@@ -92,7 +94,7 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Line::from("spomo".bold());
+        let title = Line::from(APP_NAME.bold());
         let block = Block::bordered()
             .title(title.centered())
             .border_set(border::THICK);
