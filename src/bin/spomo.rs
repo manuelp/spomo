@@ -1,13 +1,14 @@
 use chrono::prelude::*;
 use error_stack::ResultExt;
+use owo_colors::OwoColorize;
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Stylize,
+    style::{Color, Style, Stylize},
     symbols::border,
-    text::{Line, Text},
-    widgets::{Block, Paragraph, Widget},
+    text::{Line, Span, Text},
+    widgets::{Block, Gauge, Paragraph, Widget},
 };
 use spomo::common::format_time;
 use spomo::error::{AppError, AppResult};
@@ -99,27 +100,30 @@ impl Widget for &App {
             .title(title.centered())
             .border_set(border::THICK);
 
+        let remaining_text = format_time(self.cursor.remaining_secs);
         let remaining_line = Line::from(vec![
             "Remaining:".into(),
-            format_time(self.cursor.remaining_secs).red().bold(),
+            remaining_text.clone().red().bold(),
         ]);
-        let elapsed_line = Line::from(vec![
-            "Elapsed:".into(),
-            format_time(self.cursor.elapsed_secs).green(),
-        ]);
+        let elapsed_text = format_time(self.cursor.elapsed_secs);
+        let elapsed_line = Line::from(vec!["Elapsed:".into(), elapsed_text.clone().green()]);
         let time_text = Text::from(vec![remaining_line, elapsed_line]);
 
         // Layout work to centering vertically the time text
         let text_height = time_text.height() as u16;
-        let empty_space = area.height.saturating_sub(text_height);
+        let total_height = text_height + 1; // text + gauge;
+
+        let empty_space = area.height.saturating_sub(total_height);
         let padding = empty_space / 2;
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
                 Constraint::Length(padding),
                 Constraint::Length(text_height),
+                Constraint::Length(1), // gauge
                 Constraint::Length(padding),
             ])
+            .margin(1)
             .split(area);
 
         // Render the containing block
@@ -129,6 +133,17 @@ impl Widget for &App {
         Paragraph::new(time_text)
             .alignment(Alignment::Center)
             .render(chunks[1], buf);
+
+        let ratio = self.cursor.remaining_secs as f64 / self.duration_secs as f64;
+        let label = Span::styled(
+            remaining_text,
+            Style::default().italic().bold().fg(Color::DarkGray),
+        );
+        Gauge::default()
+            .ratio(ratio)
+            .label(label)
+            .gauge_style(Style::default().bg(Color::Red).fg(Color::Green))
+            .render(chunks[2], buf);
     }
 }
 
