@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::prelude::*;
 use error_stack::ResultExt;
 use ratatui::{
     DefaultTerminal, Frame,
@@ -143,6 +143,6 @@ fn main() -> AppResult<()> {
     let result = app.run(&mut terminal);
 
     ratatui::restore();
-    println!("Ended: {}", Local::now().to_rfc3339());
+    println!("Ended: {}", Local::now());
     result
 }
