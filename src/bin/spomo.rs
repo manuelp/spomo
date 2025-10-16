@@ -153,10 +153,10 @@ impl Widget for &App {
         let remaining_text = format_time(self.cursor.remaining_secs);
         let remaining_line = Line::from(vec![
             "Remaining:".into(),
-            remaining_text.clone().red().bold(),
+            remaining_text.clone().green().bold(),
         ]);
         let elapsed_text = format_time(self.cursor.elapsed_secs);
-        let elapsed_line = Line::from(vec!["Elapsed:".into(), elapsed_text.clone().green()]);
+        let elapsed_line = Line::from(vec!["Elapsed:".into(), elapsed_text.clone().red()]);
         let time_text = Text::from(vec![remaining_line, elapsed_line]);
 
         // Layout work to centering vertically the time text and gauge
