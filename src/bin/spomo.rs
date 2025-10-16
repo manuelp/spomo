@@ -1,6 +1,5 @@
 use chrono::prelude::*;
 use error_stack::ResultExt;
-use owo_colors::OwoColorize;
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
@@ -8,7 +7,7 @@ use ratatui::{
     style::{Color, Style, Stylize},
     symbols::border,
     text::{Line, Span, Text},
-    widgets::{Block, Gauge, Paragraph, Widget},
+    widgets::{Block, Borders, Gauge, Paragraph, Widget},
 };
 use spomo::common::format_time;
 use spomo::error::{AppError, AppResult};
@@ -95,11 +94,32 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        // Main content block
         let title = Line::from(APP_NAME.bold());
-        let block = Block::bordered()
+        let main_block = Block::bordered()
             .title(title.centered())
             .border_set(border::THICK);
 
+        // Keybindings block
+        let keybindings_hint = Span::styled("(q) Quit", Style::default().fg(Color::LightYellow));
+        let keybindings_block = Paragraph::new(Line::from(keybindings_hint))
+            .block(Block::bordered().borders(Borders::ALL))
+            .centered();
+
+        // Outer layout
+        let outer_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(3), Constraint::Length(3)])
+            .split(area);
+        let main_chunk = outer_chunks[0];
+        let footer_chunk = outer_chunks[1];
+
+        // Render the main blocks
+        main_block.render(main_chunk, buf);
+        keybindings_block.render(footer_chunk, buf);
+
+        // ------ Main block content (layout and rendering)
+        // Time text
         let remaining_text = format_time(self.cursor.remaining_secs);
         let remaining_line = Line::from(vec![
             "Remaining:".into(),
@@ -109,11 +129,11 @@ impl Widget for &App {
         let elapsed_line = Line::from(vec!["Elapsed:".into(), elapsed_text.clone().green()]);
         let time_text = Text::from(vec![remaining_line, elapsed_line]);
 
-        // Layout work to centering vertically the time text
+        // Layout work to centering vertically the time text and gauge
         let text_height = time_text.height() as u16;
-        let total_height = text_height + 1; // text + gauge;
+        let total_height = text_height + 1; // text + gauge + footer;
 
-        let empty_space = area.height.saturating_sub(total_height);
+        let empty_space = main_chunk.height.saturating_sub(total_height);
         let padding = empty_space / 2;
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -121,13 +141,10 @@ impl Widget for &App {
                 Constraint::Length(padding),
                 Constraint::Length(text_height),
                 Constraint::Length(1), // gauge
-                Constraint::Length(padding),
+                Constraint::Length(padding)
             ])
             .margin(1)
             .split(area);
-
-        // Render the containing block
-        block.render(area, buf);
 
         // Render the paragraph in the middle rect produced by the vertical layout
         Paragraph::new(time_text)
