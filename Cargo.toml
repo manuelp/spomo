@@ -1,6 +1,6 @@
 [package]
 name = "spomo"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Manuel Paccagnella <manuel.paccagnella@protonmail.com>"]
 license = "MIT"
 edition = "2024"
