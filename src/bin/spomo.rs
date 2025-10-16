@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use error_stack::ResultExt;
 use ratatui::{
     DefaultTerminal, Frame,
@@ -14,8 +15,8 @@ use spomo::error::{AppError, AppResult};
 use spomo::feature;
 use spomo::feature::audio::{Beeper, SimpleBeeper};
 use spomo::init;
+use std::env;
 use std::time::{Duration, Instant};
-use std::{env, thread};
 
 const APP_NAME: &'static str = "spomo";
 
@@ -42,6 +43,7 @@ struct App {
     started: Instant,
     duration_secs: u64,
     cursor: TimeCursor,
+    exit: bool,
 }
 
 impl App {
@@ -50,6 +52,7 @@ impl App {
             started: Instant::now(),
             duration_secs,
             cursor: TimeCursor::default(),
+            exit: false,
         }
     }
 
@@ -66,6 +69,7 @@ impl App {
 
     fn run(&mut self, terminal: &mut DefaultTerminal) -> AppResult<()> {
         loop {
+            // Every iteration is 1 second (poll time for the events handling, see below)
             self.tick();
 
             terminal
@@ -73,22 +77,48 @@ impl App {
                 .change_context(AppError)
                 .attach("cannot render frame")?;
 
-            thread::sleep(Duration::from_secs(1));
-            if self.cursor.elapsed_secs >= self.duration_secs {
+            self.handle_events()?;
+
+            if self.cursor.elapsed_secs >= self.duration_secs || self.exit {
                 break;
             }
         }
 
-        SimpleBeeper::default()
-            .beep()
-            .change_context(AppError)
-            .attach("cannot reproduce beep")?;
+        if !self.exit {
+            SimpleBeeper::default()
+                .beep()
+                .change_context(AppError)
+                .attach("cannot reproduce beep")?;
+        }
 
         Ok(())
     }
 
     fn draw(&self, frame: &mut Frame) {
         frame.render_widget(self, frame.area());
+    }
+
+    fn handle_events(&mut self) -> AppResult<()> {
+        let event_available = event::poll(Duration::from_secs(1))
+            .change_context(AppError)
+            .attach("cannot read event")?;
+        if event_available {
+            match event::read()
+                .change_context(AppError)
+                .attach("cannot read event")?
+            {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    match key_event.code {
+                        KeyCode::Char('q') => self.exit = true,
+                        _ => (),
+                    }
+                    Ok(())
+                }
+                _ => Ok(()),
+            }
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -101,7 +131,7 @@ impl Widget for &App {
             .border_set(border::THICK);
 
         // Keybindings block
-        let keybindings_hint = Span::styled("(q) Quit", Style::default().fg(Color::LightYellow));
+        let keybindings_hint = Span::styled("(q) Quit", Style::default().fg(Color::LightCyan));
         let keybindings_block = Paragraph::new(Line::from(keybindings_hint))
             .block(Block::bordered().borders(Borders::ALL))
             .centered();
@@ -141,7 +171,7 @@ impl Widget for &App {
                 Constraint::Length(padding),
                 Constraint::Length(text_height),
                 Constraint::Length(1), // gauge
-                Constraint::Length(padding)
+                Constraint::Length(padding),
             ])
             .margin(1)
             .split(area);
@@ -152,13 +182,9 @@ impl Widget for &App {
             .render(chunks[1], buf);
 
         let ratio = self.cursor.remaining_secs as f64 / self.duration_secs as f64;
-        let label = Span::styled(
-            remaining_text,
-            Style::default().italic().bold().fg(Color::DarkGray),
-        );
         Gauge::default()
             .ratio(ratio)
-            .label(label)
+            .label("")
             .gauge_style(Style::default().bg(Color::Red).fg(Color::Green))
             .render(chunks[2], buf);
     }
