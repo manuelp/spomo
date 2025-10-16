@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "===[ Running tests ]==="
-cargo nextest run
+cargo test
 
 echo "===[ Building ]==="
 cargo build --release
