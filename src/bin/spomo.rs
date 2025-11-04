@@ -181,9 +181,10 @@ impl Widget for &App {
             .alignment(Alignment::Center)
             .render(chunks[1], buf);
 
+
         let ratio = self.cursor.remaining_secs as f64 / self.duration_secs as f64;
         Gauge::default()
-            .ratio(ratio)
+            .ratio(ratio.clamp(0.0, 1.0))
             .label("")
             .gauge_style(Style::default().bg(Color::Red).fg(Color::Green))
             .render(chunks[2], buf);
